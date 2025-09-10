@@ -1,0 +1,148 @@
+version: '3.8'
+
+services:
+  # Main Next.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crowe-app
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://crowe:${DB_PASSWORD:-CroweDB2025}@postgres:5432/crowe_platform
+      - REDIS_URL=redis://redis:6379
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-https://crowecode.com}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-your-secret-key-here}
+      - JWT_SECRET=${JWT_SECRET:-your-jwt-secret-here}
+      # AI Keys
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/google-cloud.json
+      # Oracle Config
+      - ORACLE_DB_USER=${ORACLE_DB_USER}
+      - ORACLE_DB_PASSWORD=${ORACLE_DB_PASSWORD}
+      - ORACLE_DB_CONNECTION_STRING=${ORACLE_DB_CONNECTION_STRING}
+      # GitHub Integration
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+      - GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN}
+    volumes:
+      - ./uploads:/app/uploads
+      - ./credentials:/app/credentials:ro
+      - ./.env.production:/app/.env.production:ro
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - crowe-network
+    restart: unless-stopped
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: crowe-db
+    environment:
+      - POSTGRES_USER=crowe
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-CroweDB2025}
+      - POSTGRES_DB=crowe_platform
+      - POSTGRES_INITDB_ARGS=--encoding=UTF8
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crowe"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - crowe-network
+    restart: unless-stopped
+
+  # Redis for caching, sessions, and queues
+  redis:
+    image: redis:7-alpine
+    container_name: crowe-cache
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-RedisPass2025}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - crowe-network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy with SSL
+  nginx:
+    image: nginx:alpine
+    container_name: crowe-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx-production.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./static:/usr/share/nginx/html/static:ro
+      - nginx_cache:/var/cache/nginx
+    depends_on:
+      - app
+    networks:
+      - crowe-network
+    restart: unless-stopped
+
+  # Prisma Migration Runner
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crowe-migrate
+    environment:
+      - DATABASE_URL=postgresql://crowe:${DB_PASSWORD:-CroweDB2025}@postgres:5432/crowe_platform
+    command: npx prisma migrate deploy
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - crowe-network
+    restart: "no"
+
+  # Backup Service
+  backup:
+    image: postgres:15-alpine
+    container_name: crowe-backup
+    environment:
+      - PGPASSWORD=${DB_PASSWORD:-CroweDB2025}
+    volumes:
+      - ./backups:/backups
+    command: >
+      sh -c "while true; do
+        pg_dump -h postgres -U crowe crowe_platform > /backups/backup-$$(date +%Y%m%d-%H%M%S).sql
+        find /backups -type f -mtime +7 -delete
+        sleep 86400
+      done"
+    depends_on:
+      - postgres
+    networks:
+      - crowe-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  nginx_cache:
+    driver: local
+
+networks:
+  crowe-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

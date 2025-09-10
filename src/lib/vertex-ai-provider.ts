@@ -219,7 +219,11 @@ class VertexAIProviderManager {
       return result;
     } else {
       const result = await model.generateContent({ contents });
-      return result.response.text();
+      const candidates = result.response.candidates;
+      if (candidates && candidates.length > 0 && candidates[0].content?.parts?.[0]?.text) {
+        return candidates[0].content.parts[0].text;
+      }
+      return '';
     }
   }
 

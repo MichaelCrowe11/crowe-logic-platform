@@ -34,11 +34,16 @@ export function verifyToken(token: string): UserPayload | null {
 export async function createUser(email: string, password: string, name: string) {
   const hashedPassword = await hashPassword(password)
   
+  const nameParts = name.split(' ')
+  const firstName = nameParts[0] || ''
+  const lastName = nameParts.slice(1).join(' ') || ''
+  
   return prisma.user.create({
     data: {
       email,
-      password: hashedPassword,
-      name,
+      passwordHash: hashedPassword,
+      firstName,
+      lastName,
       role: 'USER'
     }
   })
@@ -53,7 +58,7 @@ export async function authenticateUser(email: string, password: string) {
     throw new Error('Invalid credentials')
   }
   
-  const isValid = await verifyPassword(password, user.password)
+  const isValid = await verifyPassword(password, user.passwordHash || '')
   
   if (!isValid) {
     throw new Error('Invalid credentials')
@@ -62,7 +67,7 @@ export async function authenticateUser(email: string, password: string) {
   const token = generateToken({
     id: user.id,
     email: user.email,
-    name: user.name || '',
+    name: user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user.email,
     role: user.role
   })
   

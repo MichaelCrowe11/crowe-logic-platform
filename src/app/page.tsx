@@ -1,278 +1,399 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import {
-  Brain,
-  FlaskConical,
-  Leaf,
-  Settings,
-  TrendingUp,
-  Box,
-  Network,
-  Zap,
-  BookOpenText,
-  Workflow,
-  BarChart3,
-  Rocket,
   Code2,
+  GitBranch,
+  Star,
+  Eye,
+  GitFork,
+  Clock,
+  Users,
+  Zap,
+  Globe,
+  Search,
+  Plus,
+  Book,
+  Bookmark,
+  Activity,
+  Settings,
+  ChevronDown,
+  Folder,
+  Terminal,
+  Play,
 } from "lucide-react";
 
-// Minimal in-file UI primitives (so this runs without extra component deps)
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-2xl shadow-sm border border-white/10 bg-white/5 backdrop-blur-md p-5 ${className}`}>{children}</div>
+    <div className={`rounded-lg border border-white/10 bg-white/5 backdrop-blur-md p-4 ${className}`}>{children}</div>
   );
 }
 
-function Badge({ children }: { children: React.ReactNode }) {
+function Badge({ children, variant = "default" }: { children: React.ReactNode; variant?: "default" | "green" | "blue" }) {
+  const variants = {
+    default: "bg-white/10 text-white/80",
+    green: "bg-green-500/20 text-green-400 border-green-500/50",
+    blue: "bg-blue-500/20 text-blue-400 border-blue-500/50"
+  };
+  
   return (
-    <span className="text-[10px] tracking-wide font-semibold px-2 py-1 rounded-md border border-white/10 bg-white/10">
+    <span className={`text-xs font-medium px-2 py-1 rounded-full border ${variants[variant]}`}>
       {children}
     </span>
   );
 }
 
-const tiles = [
+const repositories = [
   {
-    label: "CroweCode IDE",
-    href: "/ide",
-    icon: Code2,
-    desc: "Proprietary AI-powered development environment with CroweCode Intelligence.",
-    tags: ["[AI_CODING]", "[PROPRIETARY]"]
+    name: "crowe-ai-core",
+    description: "Core AI engine powering CroweCode Intelligence",
+    language: "TypeScript",
+    stars: 1247,
+    forks: 89,
+    updated: "2 hours ago",
+    isPrivate: false,
+    topics: ["ai", "typescript", "machine-learning"]
   },
   {
-    label: "CLX Extracts",
-    href: "/clx",
-    icon: FlaskConical,
-    desc: "Dual-phase extract tracker, LBR™ scoring, tiering.",
-    tags: ["[EXTRACT_TIER]", "[PHASE]"]
+    name: "crowecode-ide",
+    description: "Next-generation cloud development environment",
+    language: "React",
+    stars: 2156,
+    forks: 156,
+    updated: "4 hours ago",
+    isPrivate: false,
+    topics: ["ide", "react", "monaco-editor"]
   },
   {
-    label: "Substrate Matrix",
-    href: "/substrate",
-    icon: Box,
-    desc: "Species-tuned recipes, hydration + gypsum autopilot.",
-    tags: ["[SUBSTRATE]", "[YIELD]"]
+    name: "crowe-agriculture",
+    description: "Smart agriculture monitoring and analytics platform",
+    language: "Python",
+    stars: 892,
+    forks: 67,
+    updated: "1 day ago",
+    isPrivate: true,
+    topics: ["agriculture", "iot", "analytics"]
   },
   {
-    label: "Grow Ops (Sprint)",
-    href: "/sprint",
-    icon: Workflow,
-    desc: "Weekly block schedule, lab→sterilization→shipping.",
-    tags: ["[PHASE]", "[CONSISTENCY]"]
-  },
-  {
-    label: "EI Simulator",
-    href: "/ei",
-    icon: Network,
-    desc: "Mycelium EI site-fit & remediation planner.",
-    tags: ["[EQUIPMENT]", "[ROI_FACTOR]"]
-  },
-  {
-    label: "ELN / Lab Notebook",
-    href: "/eln",
-    icon: BookOpenText,
-    desc: "Cultures, plates, LC runs, batch notes.",
-    tags: ["[MUSHROOM]", "[PROBLEM]"]
-  },
-  {
-    label: "Analytics",
-    href: "/analytics",
-    icon: BarChart3,
-    desc: "Yields, contamination rate, setpoint drift.",
-    tags: ["[IMPROVE]", "[SCALE]"]
-  },
-  {
-    label: "Agriculture Intelligence",
-    href: "/agriculture",
-    icon: Leaf,
-    desc: "IoT sensors, voice entry, crop tracking, ML predictions.",
-    tags: ["[IOT]", "[VOICE]"]
-  },
-  {
-    label: "ML Lab",
-    href: "/ml-lab",
-    icon: Brain,
-    desc: "Machine learning development, Jupyter notebooks, model training.",
-    tags: ["[ML]", "[DATA_SCIENCE]"]
-  },
-  {
-    label: "Automations",
-    href: "/automations",
-    icon: Zap,
-    desc: "HVAC, humidifiers, CO₂ exchange, alerts.",
-    tags: ["[AUTOMATION]", "[SAFETY]"]
-  },
-  {
-    label: "Settings",
-    href: "/settings",
-    icon: Settings,
-    desc: "Keys, models, orgs, roles, data retention.",
-    tags: ["[PRIVACY]", "[PROVENANCE]"]
-  },
+    name: "crowehub-connector",
+    description: "Universal connector for CroweHub ecosystem",
+    language: "Go",
+    stars: 456,
+    forks: 23,
+    updated: "3 days ago",
+    isPrivate: false,
+    topics: ["api", "connector", "microservices"]
+  }
 ];
 
-export default function CroweLogicDashboard() {
+const workspaces = [
+  {
+    name: "Production Environment",
+    repositories: 12,
+    collaborators: 8,
+    status: "active",
+    lastActivity: "2 minutes ago"
+  },
+  {
+    name: "Development Sandbox",
+    repositories: 6,
+    collaborators: 3,
+    status: "active",
+    lastActivity: "1 hour ago"
+  },
+  {
+    name: "AI Research Lab",
+    repositories: 4,
+    collaborators: 12,
+    status: "paused",
+    lastActivity: "2 days ago"
+  }
+];
+
+export default function CroweCodeSpaces() {
+  const [activeTab, setActiveTab] = useState("repositories");
+
   return (
-    <div className="min-h-dvh bg-gradient-to-b from-zinc-900 via-zinc-950 to-black text-zinc-100">
-      {/* Top Bar */}
-      <header className="sticky top-0 z-20 backdrop-blur supports-[backdrop-filter]:bg-black/20 border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-5 py-4 flex items-center gap-3">
-          <div className="flex items-center gap-3">
-            <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-white/10">
-              <Image
-                src="/crowe-avatar.png"
-                alt="Crowe Logic Avatar"
-                width={40}
-                height={40}
-                className="object-cover"
-                priority
-              />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black text-white">
+      {/* Header */}
+      <header className="sticky top-0 z-50 backdrop-blur-sm bg-black/80 border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                  <Code2 size={18} className="text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold">CroweCode Spaces</h1>
+                  <p className="text-xs text-white/60">Cloud Development Platform</p>
+                </div>
+              </div>
+              
+              <nav className="hidden md:flex items-center gap-6 ml-8">
+                <Link href="/repositories" className="text-white/80 hover:text-white text-sm">Repositories</Link>
+                <Link href="/workspaces" className="text-white/80 hover:text-white text-sm">Workspaces</Link>
+                <Link href="/crowehub" className="text-white/80 hover:text-white text-sm">CroweHub</Link>
+                <Link href="/marketplace" className="text-white/80 hover:text-white text-sm">Marketplace</Link>
+              </nav>
             </div>
-            <div>
-              <h1 className="text-lg font-semibold leading-tight">CroweCode™ Platform</h1>
-              <p className="text-xs text-white/70">Proprietary AI Development System • Next-Gen Intelligence</p>
+
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60" />
+                <input
+                  type="text"
+                  placeholder="Search repositories..."
+                  className="pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-sm placeholder-white/60 focus:outline-none focus:border-blue-500 w-64"
+                />
+              </div>
+              <button className="p-2 bg-blue-600 hover:bg-blue-700 rounded-lg">
+                <Plus size={16} />
+              </button>
+              <Link href="/settings" className="p-2 hover:bg-white/10 rounded-lg">
+                <Settings size={16} />
+              </Link>
             </div>
-          </div>
-          <div className="ml-auto flex items-center gap-3">
-            <Link
-              href="/quick-start"
-              className="rounded-xl px-4 py-2 text-sm bg-white/10 hover:bg-white/15 border border-white/10"
-            >
-              Quick Start
-            </Link>
-            <Link
-              href="/deploy"
-              className="rounded-xl px-4 py-2 text-sm bg-emerald-500/90 hover:bg-emerald-500 text-black font-medium"
-            >
-              Deploy
-            </Link>
           </div>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="max-w-7xl mx-auto px-5 pt-10">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45 }}
-        >
-          <Card className="p-6 bg-white/[0.04]">
-            <div className="flex flex-col md:flex-row md:items-center gap-5">
-              <div className="flex-1">
-                <h2 className="text-2xl md:text-3xl font-semibold">MVP Dashboard</h2>
-                <p className="text-sm md:text-base text-white/80 mt-2">
-                  Operate cultivation, extraction, and environmental intelligence from one pane of glass. 
-                  Built for speed, scale, and trust‑by‑design.
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Badge>[CONSISTENCY]</Badge>
-                  <Badge>[ADAPTABILITY]</Badge>
-                  <Badge>[RESOURCEFULNESS]</Badge>
-                  <Badge>[GRIT]</Badge>
-                  <Badge>[LONG_TERM_VISION]</Badge>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Panel */}
+          <div className="lg:col-span-2">
+            {/* Quick Actions */}
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold mb-4">Quick Start</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Link href="/ide" className="group">
+                  <Card className="h-full hover:border-blue-500/50 transition-colors">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-blue-500/20 rounded-lg group-hover:bg-blue-500/30">
+                        <Terminal size={20} className="text-blue-400" />
+                      </div>
+                      <span className="font-medium">Launch IDE</span>
+                    </div>
+                    <p className="text-sm text-white/70">Start coding instantly with CroweCode IDE</p>
+                  </Card>
+                </Link>
+
+                <Link href="/new-repository" className="group">
+                  <Card className="h-full hover:border-green-500/50 transition-colors">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-green-500/20 rounded-lg group-hover:bg-green-500/30">
+                        <Folder size={20} className="text-green-400" />
+                      </div>
+                      <span className="font-medium">New Repository</span>
+                    </div>
+                    <p className="text-sm text-white/70">Create a new project repository</p>
+                  </Card>
+                </Link>
+
+                <Link href="/workspace/new" className="group">
+                  <Card className="h-full hover:border-purple-500/50 transition-colors">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-purple-500/20 rounded-lg group-hover:bg-purple-500/30">
+                        <Play size={20} className="text-purple-400" />
+                      </div>
+                      <span className="font-medium">New Workspace</span>
+                    </div>
+                    <p className="text-sm text-white/70">Create collaborative workspace</p>
+                  </Card>
+                </Link>
+              </div>
+            </div>
+
+            {/* Tabs */}
+            <div className="mb-6">
+              <div className="flex border-b border-white/10">
+                <button
+                  onClick={() => setActiveTab("repositories")}
+                  className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === "repositories"
+                      ? "border-blue-500 text-blue-400"
+                      : "border-transparent text-white/70 hover:text-white"
+                  }`}
+                >
+                  Repositories
+                </button>
+                <button
+                  onClick={() => setActiveTab("workspaces")}
+                  className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === "workspaces"
+                      ? "border-blue-500 text-blue-400"
+                      : "border-transparent text-white/70 hover:text-white"
+                  }`}
+                >
+                  Workspaces
+                </button>
+              </div>
+            </div>
+
+            {/* Tab Content */}
+            {activeTab === "repositories" && (
+              <div className="space-y-4">
+                {repositories.map((repo, index) => (
+                  <Card key={repo.name} className="hover:border-white/20 transition-colors">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Link href={`/repository/${repo.name}`} className="text-blue-400 hover:underline font-medium">
+                            {repo.name}
+                          </Link>
+                          {repo.isPrivate && <Badge>Private</Badge>}
+                        </div>
+                        <p className="text-sm text-white/70 mb-3">{repo.description}</p>
+                        <div className="flex items-center gap-4 text-xs text-white/60">
+                          <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                            <span>{repo.language}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Star size={12} />
+                            <span>{repo.stars}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <GitFork size={12} />
+                            <span>{repo.forks}</span>
+                          </div>
+                          <span>Updated {repo.updated}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {repo.topics.map((topic) => (
+                            <Badge key={topic} variant="blue">{topic}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button className="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-sm">
+                          Code
+                        </button>
+                        <button className="p-1 hover:bg-white/10 rounded">
+                          <Star size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {activeTab === "workspaces" && (
+              <div className="space-y-4">
+                {workspaces.map((workspace, index) => (
+                  <Card key={workspace.name} className="hover:border-white/20 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Link href={`/workspace/${workspace.name.toLowerCase().replace(/\s+/g, '-')}`} className="text-blue-400 hover:underline font-medium">
+                            {workspace.name}
+                          </Link>
+                          <Badge variant={workspace.status === "active" ? "green" : "default"}>
+                            {workspace.status}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-white/70">
+                          <span>{workspace.repositories} repositories</span>
+                          <span>{workspace.collaborators} collaborators</span>
+                          <span>Active {workspace.lastActivity}</span>
+                        </div>
+                      </div>
+                      <Link 
+                        href={`/workspace/${workspace.name.toLowerCase().replace(/\s+/g, '-')}`}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+                      >
+                        Open
+                      </Link>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* CroweHub Status */}
+            <Card>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center">
+                  <Globe size={14} className="text-white" />
+                </div>
+                <h3 className="font-semibold">CroweHub Status</h3>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-white/70">API Gateway</span>
+                  <Badge variant="green">Operational</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-white/70">AI Services</span>
+                  <Badge variant="green">Operational</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-white/70">Cloud IDE</span>
+                  <Badge variant="green">Operational</Badge>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-3 text-center text-xs">
-                <div className="rounded-xl p-3 bg-white/5 border border-white/10">
-                  <p className="text-white/70">Active Batches</p>
-                  <p className="text-xl font-semibold">12</p>
+            </Card>
+
+            {/* Recent Activity */}
+            <Card>
+              <div className="flex items-center gap-2 mb-4">
+                <Activity size={16} />
+                <h3 className="font-semibold">Recent Activity</h3>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                  <div>
+                    <p className="text-sm">Pushed to <span className="text-blue-400">crowe-ai-core</span></p>
+                    <p className="text-xs text-white/60">2 hours ago</p>
+                  </div>
                 </div>
-                <div className="rounded-xl p-3 bg-white/5 border border-white/10">
-                  <p className="text-white/70">Contam Rate</p>
-                  <p className="text-xl font-semibold">1.8%</p>
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                  <div>
+                    <p className="text-sm">Opened pull request in <span className="text-blue-400">crowecode-ide</span></p>
+                    <p className="text-xs text-white/60">4 hours ago</p>
+                  </div>
                 </div>
-                <div className="rounded-xl p-3 bg-white/5 border border-white/10">
-                  <p className="text-white/70">Avg Yield / Block</p>
-                  <p className="text-xl font-semibold">3.1 lb</p>
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
+                  <div>
+                    <p className="text-sm">Created workspace <span className="text-blue-400">AI Research Lab</span></p>
+                    <p className="text-xs text-white/60">1 day ago</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Card>
-        </motion.div>
-      </section>
+            </Card>
 
-      {/* Tiles */}
-      <section className="max-w-7xl mx-auto px-5 py-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {tiles.map((t, i) => (
-            <motion.div
-              key={t.label}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: i * 0.03 }}
-            >
-              <Link href={t.href} className="block">
-                <Card className="h-full group hover:border-white/20 hover:bg-white/10 transition-colors">
-                  <div className="flex items-start gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-white/10 grid place-items-center group-hover:bg-white/15 transition-colors">
-                      <t.icon className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold leading-tight truncate">{t.label}</h3>
-                      <p className="text-xs text-white/75 mt-1 line-clamp-2">{t.desc}</p>
-                    </div>
-                  </div>
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {t.tags.map(tag => (
-                      <Badge key={tag}>{tag}</Badge>
-                    ))}
-                  </div>
-                </Card>
-              </Link>
-            </motion.div>
-          ))}
+            {/* Quick Links */}
+            <Card>
+              <h3 className="font-semibold mb-4">Quick Links</h3>
+              <div className="space-y-2">
+                <Link href="/docs" className="flex items-center gap-2 text-sm text-white/70 hover:text-white">
+                  <Book size={14} />
+                  Documentation
+                </Link>
+                <Link href="/marketplace" className="flex items-center gap-2 text-sm text-white/70 hover:text-white">
+                  <Zap size={14} />
+                  Marketplace
+                </Link>
+                <Link href="/support" className="flex items-center gap-2 text-sm text-white/70 hover:text-white">
+                  <Users size={14} />
+                  Support
+                </Link>
+              </div>
+            </Card>
+          </div>
         </div>
-      </section>
-
-      {/* Quick Actions */}
-      <section className="max-w-7xl mx-auto px-5 pb-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <div className="flex items-center gap-3">
-              <TrendingUp className="h-5 w-5" />
-              <h4 className="font-semibold">Add Batch</h4>
-            </div>
-            <p className="text-sm text-white/75 mt-2">Start a new cultivation or extraction run with guided SOPs.</p>
-            <div className="mt-3 flex gap-2">
-              <Link href="/new/cultivation" className="text-sm rounded-lg px-3 py-1.5 bg-white/10 border border-white/10 hover:bg-white/15">Cultivation</Link>
-              <Link href="/new/extract" className="text-sm rounded-lg px-3 py-1.5 bg-white/10 border border-white/10 hover:bg-white/15">Extract</Link>
-            </div>
-          </Card>
-          <Card>
-            <div className="flex items-center gap-3">
-              <Leaf className="h-5 w-5" />
-              <h4 className="font-semibold">Substrate Builder</h4>
-            </div>
-            <p className="text-sm text-white/75 mt-2">Generate species‑tuned blocks with hydration & gypsum hints.</p>
-            <div className="mt-3">
-              <Link href="/substrate/builder" className="text-sm rounded-lg px-3 py-1.5 bg-white/10 border border-white/10 hover:bg-white/15">Open Builder</Link>
-            </div>
-          </Card>
-          <Card>
-            <div className="flex items-center gap-3">
-              <Rocket className="h-5 w-5" />
-              <h4 className="font-semibold">OKR Sprint</h4>
-            </div>
-            <p className="text-sm text-white/75 mt-2">Plan 30/60/90 with cleaning routinés and weekly blocks.</p>
-            <div className="mt-3">
-              <Link href="/sprint" className="text-sm rounded-lg px-3 py-1.5 bg-white/10 border border-white/10 hover:bg-white/15">Open Sprint</Link>
-            </div>
-          </Card>
-        </div>
-      </section>
-
-      <footer className="border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-5 py-6 text-xs text-white/60 flex items-center gap-2">
-          <span>© {new Date().getFullYear()} Crowe Logic™</span>
-          <span>•</span>
-          <span>Trust‑by‑Design • Privacy • Provenance • Sustainability</span>
-        </div>
-      </footer>
+      </main>
     </div>
   );
 }

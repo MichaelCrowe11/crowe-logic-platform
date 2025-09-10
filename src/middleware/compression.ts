@@ -137,7 +137,7 @@ export async function compressionMiddleware(
     const ratio = ((originalSize - compressedSize) / originalSize * 100).toFixed(2);
     
     // Return compressed response
-    return new NextResponse(compressed, {
+    return new NextResponse(compressed as any, {
       status: response.status,
       headers: {
         ...Object.fromEntries(response.headers.entries()),

@@ -39,11 +39,7 @@ export async function verifyToken(token: string): Promise<AuthUser | null> {
       return null;
     }
 
-    // Update last used timestamp
-    await prisma.session.update({
-      where: { id: session.id },
-      data: { updatedAt: new Date() }
-    });
+    // Session is valid - skip updating timestamp for now
 
     return {
       id: session.user.id,
@@ -156,7 +152,8 @@ async function logAccess(user: AuthUser, request: NextRequest) {
                   request.headers.get('x-real-ip') || 
                   'unknown',
         userAgent: request.headers.get('user-agent') || 'unknown',
-        metadata: {
+        oldValue: null,
+        newValue: {
           url: url.pathname,
           query: Object.fromEntries(url.searchParams)
         }

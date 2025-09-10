@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     const token = generateToken({
       id: user.id,
       email: user.email,
-      name: user.name || '',
+      name: user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user.email,
       role: user.role
     })
     
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
         user: {
           id: user.id,
           email: user.email,
-          name: user.name,
+          name: user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user.email,
           role: user.role
         }
       },

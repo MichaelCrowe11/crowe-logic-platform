@@ -256,7 +256,7 @@ class GoogleSpeechProvider {
       return response.voices?.map(voice => ({
         name: voice.name || '',
         languageCodes: voice.languageCodes || [],
-        ssmlGender: voice.ssmlGender || 'NEUTRAL',
+        ssmlGender: voice.ssmlGender as string || 'NEUTRAL',
         naturalSampleRateHertz: voice.naturalSampleRateHertz || 24000,
       })) || [];
     } catch (error) {
